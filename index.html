@@ -6,16 +6,35 @@
     <title>المنيو الإلكتروني الخاص بنا</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
     <style>
         body { font-family: 'Tajawal', sans-serif; }
         .hidden { display: none !important; }
+        /* شاشة التحميل اللطيفة */
+        #loader {
+            position: fixed; inset: 0; background: rgba(255,255,255,0.95);
+            display: flex; justify-content: center; align-items: center; z-index: 50; flex-direction: column;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3; border-top: 4px solid #ea580c;
+            border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
 
+    <div id="loader">
+        <div class="spinner mb-4"></div>
+        <p class="text-lg font-bold text-gray-600">جاري تجهيز المنيو...</p>
+    </div>
+
     <nav class="bg-white shadow-md p-4 flex justify-between items-center mb-8">
-        <h1 id="restaurant-title" class="text-2xl font-bold text-orange-600">القائمة اللذيذة</h1>
-        <button onclick="checkAdmin()" class="text-sm bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded font-bold transition">الإدارة</button>
+        <h1 id="restaurant-title" class="text-2xl font-bold text-orange-600">جاري التحميل...</h1>
+        <button onclick="checkAdmin()" class="text-sm bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded font-bold transition shadow-sm">الإدارة</button>
     </nav>
 
     <div class="container mx-auto px-4 max-w-5xl mb-12 flex-grow">
@@ -29,7 +48,7 @@
                 <h3 class="text-2xl font-bold text-orange-600 mb-3">رأيك يهمنا جداً! 🌟</h3>
                 <p class="text-gray-600 mb-6 leading-relaxed font-medium text-lg">
                     نسعى دائماً لتقديم تجربة مميزة تليق بكم.<br>
-                    إذا كان لديكم أي اقتراحات لتطويرنا، أو واجهتكم أي مشكلة، لا تترددوا أبداً في التواصل معنا مباشرة. نحن هنا للاستماع إليكم!
+                    إذا كان لديكم أي اقتراحات لتطويرنا، أو واجهتكم أي مشكلة، لا تترددوا أبداً في التواصل معنا.
                 </p>
                 <a id="whatsapp-link" href="#" target="_blank" class="inline-flex items-center justify-center gap-3 bg-green-500 text-white px-8 py-4 rounded-full hover:bg-green-600 transition shadow-lg font-bold text-xl hover:shadow-xl transform hover:-translate-y-1">
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-whatsapp" viewBox="0 0 16 16">
@@ -43,7 +62,7 @@
         <div id="admin-view" class="hidden space-y-6">
             <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow">
                 <h2 class="text-2xl font-bold text-blue-600">لوحة التحكم</h2>
-                <button onclick="logoutAdmin()" class="text-white bg-red-500 hover:bg-red-600 px-4 py-2 rounded font-bold transition">خروج وعودة للمنيو</button>
+                <button onclick="logoutAdmin()" class="text-white bg-red-500 hover:bg-red-600 px-4 py-2 rounded font-bold transition shadow-sm">خروج وعودة للمنيو</button>
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-lg">
@@ -51,18 +70,18 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
                     <div>
                         <label class="block font-bold mb-1">اسم المطعم أو الكافيه</label>
-                        <input type="text" id="restaurant-name-input" class="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="أدخل اسم المكان...">
+                        <input type="text" id="restaurant-name-input" class="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
                     </div>
                     <div>
                         <label class="block font-bold mb-1">العملة (مثال: ج.م، ريال)</label>
-                        <input type="text" id="currency-input" class="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="أدخل العملة هنا...">
+                        <input type="text" id="currency-input" class="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
                     </div>
                     <div>
                         <label class="block font-bold mb-1">رقم الواتساب (للشكاوي)</label>
-                        <input type="text" id="whatsapp-input" class="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="مثال: 201xxxxxxxxx+" dir="ltr">
+                        <input type="text" id="whatsapp-input" class="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" dir="ltr">
                     </div>
                     <div class="sm:col-span-2 lg:col-span-3 mt-2">
-                        <button onclick="saveSettings()" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 font-bold transition w-full">حفظ الإعدادات</button>
+                        <button onclick="saveSettings()" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 font-bold transition w-full shadow-sm">حفظ الإعدادات بالكامل</button>
                     </div>
                 </div>
             </div>
@@ -73,7 +92,7 @@
                     <form id="add-item-form" class="space-y-4">
                         <input type="hidden" id="edit-index" value="-1">
                         <div>
-                            <label class="block font-bold mb-1">التصنيف (مثال: مشروبات، وجبات)</label>
+                            <label class="block font-bold mb-1">التصنيف</label>
                             <input type="text" id="item-category" required class="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
                         </div>
                         <div>
@@ -84,8 +103,8 @@
                             <label class="block font-bold mb-1">السعر</label>
                             <input type="number" id="item-price" required class="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
                         </div>
-                        <button type="submit" id="submit-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full font-bold transition">حفظ الصنف</button>
-                        <button type="button" onclick="cancelEdit()" id="cancel-btn" class="hidden bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 w-full font-bold transition mt-2">إلغاء التعديل</button>
+                        <button type="submit" id="submit-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full font-bold transition shadow-sm">حفظ الصنف</button>
+                        <button type="button" onclick="cancelEdit()" id="cancel-btn" class="hidden bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 w-full font-bold transition mt-2 shadow-sm">إلغاء التعديل</button>
                     </form>
                 </div>
 
@@ -100,19 +119,79 @@
     </div>
 
     <script>
+        // ==========================================
+        // إعدادات Firebase الخاصة بك
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBYCgGYTzGQNi6eITPpvF2Y1aHkxeEz7N0",
+            authDomain: "badimix-3f1ee.firebaseapp.com",
+            databaseURL: "https://badimix-3f1ee-default-rtdb.firebaseio.com", // أضفت هذا السطر لضمان عمل قاعدة البيانات بدون مشاكل
+            projectId: "badimix-3f1ee",
+            storageBucket: "badimix-3f1ee.firebasestorage.app",
+            messagingSenderId: "552754849105",
+            appId: "1:552754849105:web:fdf1fced6a4367d4839f70"
+        };
+
+        // تهيئة قاعدة البيانات
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // ==========================================
         const ADMIN_PASSWORD = "2026***";
-        
-        // جلب البيانات والإعدادات من المتصفح
-        let menuItems = JSON.parse(localStorage.getItem('myMenu')) || [];
-        let currentCurrency = localStorage.getItem('menuCurrency') || "ج.م";
-        let currentRestaurantName = localStorage.getItem('restaurantName') || "اسم مكانك هنا";
-        let currentWhatsappNumber = localStorage.getItem('whatsappNumber') || "";
+        let menuItems = [];
+        let currentCurrency = "ج.م";
+        let currentRestaurantName = "القائمة اللذيذة";
+        let currentWhatsappNumber = "";
 
-        // تطبيق الإعدادات عند فتح الصفحة
-        document.getElementById('restaurant-title').innerText = currentRestaurantName;
-        updateWhatsappDisplay();
+        // ==========================================
+        // سحب البيانات فورياً من Firebase
+        // ==========================================
+        db.ref('restaurantData').on('value', (snapshot) => {
+            const data = snapshot.val();
+            
+            // إخفاء التحميل
+            document.getElementById('loader').classList.add('hidden');
 
-        // تحديث عرض الرسالة ورقم الواتساب للزبائن
+            if (data) {
+                menuItems = data.items || [];
+                currentCurrency = data.settings?.currency || "ج.م";
+                currentRestaurantName = data.settings?.name || "القائمة اللذيذة";
+                currentWhatsappNumber = data.settings?.whatsapp || "";
+            } else {
+                menuItems = [];
+            }
+
+            // تحديث الواجهة
+            document.getElementById('restaurant-title').innerText = currentRestaurantName;
+            updateWhatsappDisplay();
+
+            if (!document.getElementById('admin-view').classList.contains('hidden')) {
+                renderAdminItems();
+            } else {
+                renderCustomerMenu();
+            }
+        });
+
+        // ==========================================
+        // الحفظ في Firebase
+        // ==========================================
+        function saveToFirebase() {
+            db.ref('restaurantData').set({
+                items: menuItems,
+                settings: {
+                    name: currentRestaurantName,
+                    currency: currentCurrency,
+                    whatsapp: currentWhatsappNumber
+                }
+            }).catch((error) => {
+                alert("حدث خطأ أثناء الحفظ: " + error.message);
+            });
+        }
+
+        // ==========================================
+        // تشغيل الواجهة
+        // ==========================================
+
         function updateWhatsappDisplay() {
             const footer = document.getElementById('whatsapp-footer');
             const link = document.getElementById('whatsapp-link');
@@ -120,10 +199,7 @@
             
             if (currentWhatsappNumber && currentWhatsappNumber.trim() !== "") {
                 footer.classList.remove('hidden');
-                
-                // تنظيف الرقم لعمل الرابط بشكل سليم
                 const cleanNumber = currentWhatsappNumber.replace(/\s+/g, '').replace('+', '');
-                
                 link.href = `https://wa.me/${cleanNumber}`;
                 displayNumber.innerText = currentWhatsappNumber;
             } else {
@@ -131,7 +207,6 @@
             }
         }
 
-        // 1. عرض المنيو للزبائن
         function renderCustomerMenu() {
             const container = document.getElementById('menu-container');
             container.innerHTML = ''; 
@@ -164,7 +239,6 @@
             }
         }
 
-        // 2. عرض الأصناف في لوحة التحكم للمدير
         function renderAdminItems() {
             const list = document.getElementById('admin-items-list');
             list.innerHTML = '';
@@ -183,40 +257,23 @@
                             <span class="text-orange-600 font-bold block sm:inline mt-1 sm:mt-0">${item.price} ${currentCurrency}</span>
                         </div>
                         <div class="flex space-x-2 space-x-reverse mt-2 sm:mt-0">
-                            <button onclick="editItem(${index})" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition">تعديل</button>
-                            <button onclick="deleteItem(${index})" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition">حذف</button>
+                            <button onclick="editItem(${index})" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition shadow-sm">تعديل</button>
+                            <button onclick="deleteItem(${index})" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition shadow-sm">حذف</button>
                         </div>
                     </div>
                 `;
             });
         }
 
-        // 3. حفظ الإعدادات
         function saveSettings() {
-            const newName = document.getElementById('restaurant-name-input').value.trim();
-            const newCurrency = document.getElementById('currency-input').value.trim();
-            const newWhatsapp = document.getElementById('whatsapp-input').value.trim();
-
-            if(newName !== "") {
-                currentRestaurantName = newName;
-                localStorage.setItem('restaurantName', currentRestaurantName);
-                document.getElementById('restaurant-title').innerText = currentRestaurantName;
-            }
+            currentRestaurantName = document.getElementById('restaurant-name-input').value.trim() || "القائمة اللذيذة";
+            currentCurrency = document.getElementById('currency-input').value.trim() || "ج.م";
+            currentWhatsappNumber = document.getElementById('whatsapp-input').value.trim();
             
-            if(newCurrency !== "") {
-                currentCurrency = newCurrency;
-                localStorage.setItem('menuCurrency', currentCurrency);
-            }
-
-            currentWhatsappNumber = newWhatsapp;
-            localStorage.setItem('whatsappNumber', currentWhatsappNumber);
-            updateWhatsappDisplay();
-
-            alert("تم حفظ الإعدادات بنجاح!");
-            renderAdminItems();
+            saveToFirebase();
+            alert("تم حفظ الإعدادات بنجاح! ستظهر للجميع الآن.");
         }
 
-        // 4. التحقق من الدخول
         function checkAdmin() {
             const pass = prompt("الرجاء إدخال كلمة المرور للوحة التحكم:");
             if (pass === ADMIN_PASSWORD) {
@@ -233,7 +290,6 @@
             }
         }
 
-        // 5. الخروج من لوحة التحكم
         function logoutAdmin() {
             document.getElementById('admin-view').classList.add('hidden');
             document.getElementById('customer-view').classList.remove('hidden');
@@ -241,7 +297,6 @@
             renderCustomerMenu(); 
         }
 
-        // 6. إضافة أو تعديل صنف
         document.getElementById('add-item-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const category = document.getElementById('item-category').value.trim();
@@ -258,12 +313,10 @@
                 cancelEdit();
             }
 
-            localStorage.setItem('myMenu', JSON.stringify(menuItems));
+            saveToFirebase();
             this.reset();
-            renderAdminItems();
         });
 
-        // 7. تجهيز صنف للتعديل
         function editItem(index) {
             const item = menuItems[index];
             document.getElementById('item-category').value = item.category;
@@ -280,7 +333,6 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // 8. إلغاء وضع التعديل
         function cancelEdit() {
             document.getElementById('add-item-form').reset();
             document.getElementById('edit-index').value = -1;
@@ -291,21 +343,16 @@
             document.getElementById('cancel-btn').classList.add('hidden');
         }
 
-        // 9. حذف صنف
         function deleteItem(index) {
             if (confirm("هل أنت متأكد أنك تريد حذف هذا الصنف؟")) {
                 menuItems.splice(index, 1);
-                localStorage.setItem('myMenu', JSON.stringify(menuItems));
-                renderAdminItems();
+                saveToFirebase(); 
                 
                 if (parseInt(document.getElementById('edit-index').value) === index) {
                     cancelEdit();
                 }
             }
         }
-
-        // تشغيل عرض المنيو عند فتح الصفحة
-        renderCustomerMenu();
     </script>
 </body>
 </html>
